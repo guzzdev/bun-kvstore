@@ -1,5 +1,14 @@
 import { Database } from "bun:sqlite";
 
+// Add this interface to define the structure of the row returned from the database
+interface KVStoreRow {
+  key: string;
+  value: string; // Assuming value is stored as a string in the database
+}
+
+// Define a type for the value that can be stored
+type KVStoreValue = string | number | boolean | object; // Adjust as needed
+
 export class KVStore {
   private db: Database;
 
@@ -15,7 +24,7 @@ export class KVStore {
     )`);
   }
 
-  public async set(key: string, value: any): Promise<void> {
+  public async set(key: string, value: KVStoreValue): Promise<void> {
     try {
       const serializedValue = JSON.stringify(value);
       this.db.run(
@@ -28,11 +37,11 @@ export class KVStore {
     }
   }
 
-  public async get(key: string): Promise<any | null> {
+  public async get(key: string): Promise<KVStoreValue | null> {
     try {
       const result = this.db
         .query("SELECT value FROM kv_store WHERE key = ?")
-        .get(key);
+        .get(key) as KVStoreRow | undefined;
       return result ? JSON.parse(result.value) : null;
     } catch (error) {
       console.error("Error getting value:", error);
@@ -49,12 +58,12 @@ export class KVStore {
     }
   }
 
-  public async list(): Promise<{ key: string; value: any }[]> {
+  public async list(): Promise<{ key: string; value: KVStoreValue }[]> {
     try {
-      const rows = this.db.query("SELECT * FROM kv_store").all();
+      const rows = this.db.query("SELECT * FROM kv_store").all() as KVStoreRow[];
       return rows.map((row) => ({
         key: row.key,
-        value: JSON.parse(row.value),
+        value: JSON.parse(row.value) as KVStoreValue,
       }));
     } catch (error) {
       console.error("Error listing values:", error);
@@ -71,7 +80,7 @@ export class KVStore {
     }
   }
 
-  public async batchSet(entries: { key: string; value: any }[]): Promise<void> {
+  public async batchSet(entries: { key: string; value: KVStoreValue }[]): Promise<void> {
     try {
       const stmt = this.db.prepare(
         "INSERT OR REPLACE INTO kv_store (key, value) VALUES (?, ?)"
