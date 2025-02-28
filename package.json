@@ -1,5 +1,5 @@
 {
-  "name": "@gzdv/bun.kv",
+  "name": "@gzdv/bun-kvstore",
   "module": "bun.ts",
   "type": "module",
   "scripts": {
