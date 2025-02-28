@@ -24,9 +24,17 @@ export class KVStore {
     )`);
   }
 
+  private serialize(value: KVStoreValue): string {
+    return JSON.stringify(value);
+  }
+
+  private deserialize(value: string): KVStoreValue {
+    return JSON.parse(value);
+  }
+
   public async set(key: string, value: KVStoreValue): Promise<void> {
     try {
-      const serializedValue = JSON.stringify(value);
+      const serializedValue = this.serialize(value);
       this.db.run(
         "INSERT OR REPLACE INTO kv_store (key, value) VALUES (?, ?)",
         [key, serializedValue]
@@ -42,7 +50,7 @@ export class KVStore {
       const result = this.db
         .query("SELECT value FROM kv_store WHERE key = ?")
         .get(key) as KVStoreRow | undefined;
-      return result ? JSON.parse(result.value) : null;
+      return result ? this.deserialize(result.value) : null;
     } catch (error) {
       console.error("Error getting value:", error);
       return null;
@@ -63,7 +71,7 @@ export class KVStore {
       const rows = this.db.query("SELECT * FROM kv_store").all() as KVStoreRow[];
       return rows.map((row) => ({
         key: row.key,
-        value: JSON.parse(row.value) as KVStoreValue,
+        value: this.deserialize(row.value) as KVStoreValue,
       }));
     } catch (error) {
       console.error("Error listing values:", error);
@@ -86,7 +94,7 @@ export class KVStore {
         "INSERT OR REPLACE INTO kv_store (key, value) VALUES (?, ?)"
       );
       for (const { key, value } of entries) {
-        const serializedValue = JSON.stringify(value);
+        const serializedValue = this.serialize(value);
         stmt.run(key, serializedValue);
       }
       stmt.finalize();

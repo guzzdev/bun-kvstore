@@ -15,7 +15,7 @@
   "peerDependencies": {
     "typescript": "^5"
   },
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Bun simple KV using SQLite",
   "main": "bun.ts",
   "dependencies": {
